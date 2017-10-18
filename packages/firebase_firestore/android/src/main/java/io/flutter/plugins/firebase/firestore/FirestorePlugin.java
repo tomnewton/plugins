@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import android.util.Log;
 
 /** FirebaseDatabasePlugin */
 public class FirestorePlugin implements MethodCallHandler {
@@ -39,7 +40,7 @@ public class FirestorePlugin implements MethodCallHandler {
 
   public static void registerWith(PluginRegistry.Registrar registrar) {
     final MethodChannel channel =
-        new MethodChannel(registrar.messenger(), "plugins.flutter.io/firebase_firestore");
+        new MethodChannel(registrar.messenger(), "plugins.flutter.io/firebase_firestore", FirestoreMethodCodec.INSTANCE);
     channel.setMethodCallHandler(new FirestorePlugin(channel));
   }
 
@@ -58,7 +59,36 @@ public class FirestorePlugin implements MethodCallHandler {
   }
 
   private Query getQuery(Map<String, Object> arguments) {
-    return getCollectionReference(arguments);
+    Query query = getCollectionReference(arguments);
+    Map<String, Object> parameters = (Map<String, Object>) arguments.get("parameters");
+    if (parameters == null) return query;
+    for (Map.Entry<String, Object> entry : parameters.entrySet())
+    {
+      String param = entry.getKey();
+      Object value = entry.getValue();
+      if (param.equals("orderBy")) {
+        List args = (List) value;
+        String field = (String) args.get(0);
+        Boolean descending = (Boolean) args.get(1);
+        query = query.orderBy(field, descending ? Query.Direction.DESCENDING : Query.Direction.ASCENDING);
+      } else if (param.startsWith("where")) {
+        String[] args = param.split("-", 3);
+        String operator = args[1];
+        String field = args[2];
+        if ("<".equals(operator)) {
+          query = query.whereLessThan(field, value);
+        } else if ("<=".equals(operator)) {
+          query = query.whereLessThanOrEqualTo(field, value);
+        } else if ("==".equals(operator)) {
+          query = query.whereEqualTo(field, value);
+        } else if (">".equals(operator)) {
+          query = query.whereGreaterThan(field, value);
+        } else if (">=".equals(operator)) {
+          query = query.whereGreaterThanOrEqualTo(field, value);
+        }
+      }
+    }
+    return query;
   }
 
   private class DocumentObserver implements EventListener<DocumentSnapshot> {
@@ -70,6 +100,16 @@ public class FirestorePlugin implements MethodCallHandler {
 
     @Override
     public void onEvent(DocumentSnapshot documentSnapshot, FirebaseFirestoreException e) {
+      if (e != null) {
+        Log.w(TAG, "Listen failed.", e);
+        return;
+      }
+
+      if (documentSnapshot == null || !documentSnapshot.exists()) {
+        Log.d(TAG, "Current data: null");
+        return;
+      }
+
       Map<String, Object> arguments = new HashMap<>();
       arguments.put("handle", handle);
       if (documentSnapshot.exists()) {
@@ -92,6 +132,11 @@ public class FirestorePlugin implements MethodCallHandler {
 
     @Override
     public void onEvent(QuerySnapshot querySnapshot, FirebaseFirestoreException e) {
+      if (e != null) {
+        Log.w(TAG, "Listen failed.", e);
+        return;
+      }
+
       Map<String, Object> arguments = new HashMap<>();
       arguments.put("handle", handle);
 
@@ -166,11 +211,29 @@ public class FirestorePlugin implements MethodCallHandler {
           result.success(null);
           break;
         }
+      case "CollectionReference#add":
+        {
+          Map<String, Object> arguments = call.arguments();
+          CollectionReference collectionReference = getCollectionReference(arguments);
+          collectionReference.add(arguments.get("data"));
+          result.success(null);
+          break;
+        }
       case "DocumentReference#setData":
         {
           Map<String, Object> arguments = call.arguments();
           DocumentReference documentReference = getDocumentReference(arguments);
-          documentReference.set(arguments.get("data"));
+          Map<String, Object> data = (Map<String, Object>) arguments.get("data");
+          documentReference.set(data);
+          result.success(null);
+          break;
+        }
+      case "DocumentReference#update":
+        {
+          Map<String, Object> arguments = call.arguments();
+          DocumentReference documentReference = getDocumentReference(arguments);
+          Map<String, Object> data = (Map<String, Object>) arguments.get("data");
+          documentReference.update(data);
           result.success(null);
           break;
         }

@@ -22,11 +22,29 @@ class DocumentReference {
   /// Slash-delimited path representing the database location of this query.
   String get path => _pathComponents.join('/');
 
+  /// Returns the last segment of the path as the document id
+  String get id => _pathComponents.last;
+
   Future<Null> setData(Map<String, dynamic> data) {
     return Firestore.channel.invokeMethod(
       'DocumentReference#setData',
       <String, dynamic>{'path': path, 'data': data},
     );
+  }
+
+  Future<Null> update(Map<String, dynamic> data) {
+    return Firestore.channel.invokeMethod(
+      'DocumentReference#update',
+      <String, dynamic>{'path': path, 'data': data},
+    );
+  }
+
+  /// Gets a [CollectionReference] for the specified Firestore path.
+  CollectionReference collection(String path) {
+    List<String> childPath;
+    childPath = new List<String>.from(_pathComponents)
+      ..addAll(path.split(('/')));
+    return new CollectionReference._(_firestore, childPath);
   }
 
   /// Notifies of documents at this location
