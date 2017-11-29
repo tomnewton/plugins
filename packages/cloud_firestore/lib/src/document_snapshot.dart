@@ -10,22 +10,20 @@ part of cloud_firestore;
 /// The data can be extracted with the data property or by using subscript
 /// syntax to access a specific field.
 class DocumentSnapshot {
-  /// Represents the document's reference
-  final String path;
+  DocumentSnapshot._(this._path, this.data, this._firestore);
+
+  final String _path;
+  final Firestore _firestore;
+
+  /// The reference that produced this snapshot
+  DocumentReference get reference => _firestore.document(_path);
 
   /// Contains all the data of this snapshot
   final Map<String, dynamic> data;
-  final String path;
-
-<<<<<<< HEAD:packages/firebase_firestore/lib/src/document_snapshot.dart
-  DocumentSnapshot._(this.data, this.path);
-=======
-  DocumentSnapshot._(this.path, this.data);
->>>>>>> 46173b6aa4124d0fa95fedfa44ab9b25271064d4:packages/cloud_firestore/lib/src/document_snapshot.dart
 
   /// Reads individual values from the snapshot
   dynamic operator [](String key) => data[key];
 
   /// Returns the ID of the snapshot's document
-  String get documentID => path.split('/').last;
+  String get documentID => _path.split('/').last;
 }

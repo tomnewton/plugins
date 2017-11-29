@@ -29,6 +29,21 @@ class DocumentReference {
     );
   }
 
+  Future<Null> delete() {
+    return Firestore.channel.invokeMethod(
+      'DocumentReference#delete',
+      <String, dynamic>{'path': path},
+    );
+  }
+
+  /// Returns the reference of a collection contained inside of this
+  /// document.
+  CollectionReference getCollection(String collectionPath) {
+    return _firestore.collection(
+      <String>[path, collectionPath].join('/'),
+    );
+  }
+
   /// Notifies of documents at this location
   // TODO(jackson): Reduce code duplication with [Query]
   Stream<DocumentSnapshot> get snapshots {

@@ -23,21 +23,19 @@ enum DocumentChangeType {
 /// It contains the document affected and the type of change that occurred
 /// (added, modified, or removed).
 class DocumentChange {
-  DocumentChange._(Map<String, dynamic> data)
+  DocumentChange._(Map<String, dynamic> data, this._firestore)
       : oldIndex = data['oldIndex'],
         newIndex = data['newIndex'],
         document = new DocumentSnapshot._(
-<<<<<<< HEAD:packages/firebase_firestore/lib/src/document_change.dart
-          data['document'],
-          data['reference'],
-=======
           data['path'],
           data['document'],
->>>>>>> 46173b6aa4124d0fa95fedfa44ab9b25271064d4:packages/cloud_firestore/lib/src/document_change.dart
+          _firestore,
         ),
         type = DocumentChangeType.values.firstWhere((DocumentChangeType type) {
           return type.toString() == data['type'];
         });
+
+  final Firestore _firestore;
 
   /// The type of change that occurred (added, modified, or removed).
   final DocumentChangeType type;
@@ -46,7 +44,7 @@ class DocumentChange {
   /// this [DocumentChange] (i.e. supposing that all prior DocumentChange objects
   /// have been applied).
   ///
-  /// 1 for [DocumentChangeType.added] events.
+  /// -1 for [DocumentChangeType.added] events.
   final int oldIndex;
 
   /// The index of the changed document in the result set immediately after this

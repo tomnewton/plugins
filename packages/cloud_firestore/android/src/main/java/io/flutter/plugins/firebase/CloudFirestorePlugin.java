@@ -57,7 +57,35 @@ public class CloudFirestorePlugin implements MethodCallHandler {
   }
 
   private Query getQuery(Map<String, Object> arguments) {
-    return getCollectionReference(arguments);
+    Query query = getCollectionReference(arguments);
+    @SuppressWarnings("unchecked")
+    Map<String, Object> parameters = (Map<String, Object>) arguments.get("parameters");
+    if (parameters == null) return query;
+    List<List<Object>> whereConditions = (List<List<Object>>) parameters.get("where");
+    for (List<Object> condition : whereConditions) {
+      String fieldName = (String) condition.get(0);
+      String operator = (String) condition.get(1);
+      Object value = condition.get(2);
+      if ("==".equals(operator)) {
+        query = query.whereEqualTo(fieldName, value);
+      } else if ("<".equals(operator)) {
+        query = query.whereLessThan(fieldName, value);
+      } else if ("<=".equals(operator)) {
+        query = query.whereLessThanOrEqualTo(fieldName, value);
+      } else if (">".equals(operator)) {
+        query = query.whereGreaterThan(fieldName, value);
+      } else if (">=".equals(operator)) {
+        query = query.whereGreaterThanOrEqualTo(fieldName, value);
+      } else {
+        // Invalid operator.
+      }
+    }
+    List<Object> orderBy = (List<Object>) parameters.get("orderBy");
+    if (orderBy == null) return query;
+    String orderByFieldName = (String) orderBy.get(0);
+    Boolean descending = (Boolean) orderBy.get(1);
+    Query.Direction direction = descending ? Query.Direction.DESCENDING : Query.Direction.ASCENDING;
+    return query.orderBy(orderByFieldName, direction);
   }
 
   private class DocumentObserver implements EventListener<DocumentSnapshot> {
@@ -73,17 +101,10 @@ public class CloudFirestorePlugin implements MethodCallHandler {
       arguments.put("handle", handle);
       if (documentSnapshot.exists()) {
         arguments.put("data", documentSnapshot.getData());
-<<<<<<< HEAD:packages/firebase_firestore/android/src/main/java/io/flutter/plugins/firebase/firestore/FirestorePlugin.java
-        arguments.put("reference", documentSnapshot.getReference().getPath());
-      } else {
-        arguments.put("data", null);
-        arguments.put("reference", documentSnapshot.getReference().getPath());
-=======
         arguments.put("path", documentSnapshot.getReference().getPath());
       } else {
         arguments.put("data", null);
         arguments.put("path", documentSnapshot.getReference().getPath());
->>>>>>> 46173b6aa4124d0fa95fedfa44ab9b25271064d4:packages/cloud_firestore/android/src/main/java/io/flutter/plugins/firebase/CloudFirestorePlugin.java
       }
       channel.invokeMethod("DocumentSnapshot", arguments);
     }
@@ -98,20 +119,21 @@ public class CloudFirestorePlugin implements MethodCallHandler {
 
     @Override
     public void onEvent(QuerySnapshot querySnapshot, FirebaseFirestoreException e) {
+      if (e != null) {
+        // TODO: send error
+        System.out.println(e);
+      }
       Map<String, Object> arguments = new HashMap<>();
       arguments.put("handle", handle);
 
       List<String> paths = new ArrayList<>();
       List<Map<String, Object>> documents = new ArrayList<>();
-      List<String> references = new ArrayList<>();
       for (DocumentSnapshot document : querySnapshot.getDocuments()) {
         paths.add(document.getReference().getPath());
         documents.add(document.getData());
-        references.add(document.getReference().getPath());
       }
       arguments.put("paths", paths);
       arguments.put("documents", documents);
-      arguments.put("references", references);
 
       List<Map<String, Object>> documentChanges = new ArrayList<>();
       for (DocumentChange documentChange : querySnapshot.getDocumentChanges()) {
@@ -132,11 +154,7 @@ public class CloudFirestorePlugin implements MethodCallHandler {
         change.put("oldIndex", documentChange.getOldIndex());
         change.put("newIndex", documentChange.getNewIndex());
         change.put("document", documentChange.getDocument().getData());
-<<<<<<< HEAD:packages/firebase_firestore/android/src/main/java/io/flutter/plugins/firebase/firestore/FirestorePlugin.java
-        change.put("reference", documentChange.getDocument().getReference().getPath());
-=======
         change.put("path", documentChange.getDocument().getReference().getPath());
->>>>>>> 46173b6aa4124d0fa95fedfa44ab9b25271064d4:packages/cloud_firestore/android/src/main/java/io/flutter/plugins/firebase/CloudFirestorePlugin.java
         documentChanges.add(change);
       }
       arguments.put("documentChanges", documentChanges);
@@ -184,6 +202,14 @@ public class CloudFirestorePlugin implements MethodCallHandler {
           Map<String, Object> arguments = call.arguments();
           DocumentReference documentReference = getDocumentReference(arguments);
           documentReference.set(arguments.get("data"));
+          result.success(null);
+          break;
+        }
+      case "DocumentReference#delete":
+        {
+          Map<String, Object> arguments = call.arguments();
+          DocumentReference documentReference = getDocumentReference(arguments);
+          documentReference.delete();
           result.success(null);
           break;
         }
