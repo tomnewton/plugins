@@ -9,6 +9,7 @@ import android.util.SparseArray;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.firestore.WriteBatch;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentChange;
 import com.google.firebase.firestore.DocumentReference;
@@ -36,9 +37,11 @@ public class CloudFirestorePlugin implements MethodCallHandler {
 
   // Handles are ints used as indexes into the sparse array of active observers
   private int nextHandle = 0;
+  private int nextBatchHandle = 0;
   private final SparseArray<EventObserver> observers = new SparseArray<>();
   private final SparseArray<DocumentObserver> documentObservers = new SparseArray<>();
   private final SparseArray<ListenerRegistration> listenerRegistrations = new SparseArray<>();
+  private final SparseArray<WriteBatch> batches = new SparseArray<>();
 
   public static void registerWith(PluginRegistry.Registrar registrar) {
     final MethodChannel channel =
@@ -189,6 +192,61 @@ public class CloudFirestorePlugin implements MethodCallHandler {
   @Override
   public void onMethodCall(MethodCall call, final Result result) {
     switch (call.method) {
+      case "Batch#create":
+        {
+          int handle = nextBatchHandle++;
+          WriteBatch batch = FirebaseFirestore.getInstance().batch();
+          batches.put(handle, batch);
+          result.success(handle);
+          break;
+        }
+      case "Batch#set":
+        {
+          Map<String, Object> arguments = call.arguments();
+          int handle = (Integer) arguments.get("handle");
+          DocumentReference reference = getDocumentReference(arguments);
+          @SuppressWarnings("unchecked")
+          Map<String, Object> options = (Map<String, Object>) arguments.get("options");
+          WriteBatch batch = batches.get(handle);
+          if (options != null && (Boolean) options.get("merge")){
+            batch.set(reference, arguments.get("data"), SetOptions.merge());
+          } else {
+            batch.set(reference, arguments.get("data"));
+          }
+          result.success(null);
+          break;
+        }
+      case "Batch#update":
+        {
+          Map<String, Object> arguments = call.arguments();
+          int handle = (Integer) arguments.get("handle");
+          DocumentReference reference = getDocumentReference(arguments);
+          @SuppressWarnings("unchecked")
+          Map<String, Object> data = (Map<String, Object>) arguments.get("data");
+          WriteBatch batch = batches.get(handle);
+          batch.update(reference, data);
+          result.success(null);
+          break;
+        }
+      case "Batch#delete":
+        {
+          Map<String, Object> arguments = call.arguments();
+          int handle = (Integer) arguments.get("handle");
+          DocumentReference reference = getDocumentReference(arguments);
+          WriteBatch batch = batches.get(handle);
+          batch.delete(reference);
+          result.success(null);
+          break;
+        }
+      case "Batch#commit":
+        {
+          Map<String, Object> arguments = call.arguments();
+          int handle = (Integer) arguments.get("handle");
+          WriteBatch batch = batches.get(handle);
+          Task<Void> task = batch.commit();
+          addDefaultListeners("commit", task, result);
+          break;
+        }
       case "Query#addSnapshotListener":
         {
           Map<String, Object> arguments = call.arguments();
