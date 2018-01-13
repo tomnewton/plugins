@@ -36,7 +36,7 @@ public class CloudFirestorePlugin implements MethodCallHandler {
   private final MethodChannel channel;
 
   // Handles are ints used as indexes into the sparse array of active observers
-  private int nextHandle = 0;
+  private int nextListenerHandle = 0;
   private int nextBatchHandle = 0;
   private final SparseArray<EventObserver> observers = new SparseArray<>();
   private final SparseArray<DocumentObserver> documentObservers = new SparseArray<>();
@@ -244,13 +244,14 @@ public class CloudFirestorePlugin implements MethodCallHandler {
           int handle = (Integer) arguments.get("handle");
           WriteBatch batch = batches.get(handle);
           Task<Void> task = batch.commit();
+          batches.delete(handle);
           addDefaultListeners("commit", task, result);
           break;
         }
       case "Query#addSnapshotListener":
         {
           Map<String, Object> arguments = call.arguments();
-          int handle = nextHandle++;
+          int handle = nextListenerHandle++;
           EventObserver observer = new EventObserver(handle);
           observers.put(handle, observer);
           listenerRegistrations.put(handle, getQuery(arguments).addSnapshotListener(observer));
@@ -260,7 +261,7 @@ public class CloudFirestorePlugin implements MethodCallHandler {
       case "Query#addDocumentListener":
         {
           Map<String, Object> arguments = call.arguments();
-          int handle = nextHandle++;
+          int handle = nextListenerHandle++;
           DocumentObserver observer = new DocumentObserver(handle);
           documentObservers.put(handle, observer);
           listenerRegistrations.put(

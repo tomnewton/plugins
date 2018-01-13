@@ -228,10 +228,10 @@ FIRQuery *getQuery(NSDictionary *arguments) {
     [batch deleteDocument:reference];
     result(nil);
   } else if ([@"WriteBatch#commit" isEqualToString:call.method]) {
-    // TODO:
     NSNumber *handle = call.arguments[@"handle"];
     FIRWriteBatch batch = [_batches objectForKey:handle];
     [batch commitWithCompletion:defaultCompletionBlock];
+    [_batches removeObjectForKey:handle];
   } else {
     result(FlutterMethodNotImplemented);
   }
