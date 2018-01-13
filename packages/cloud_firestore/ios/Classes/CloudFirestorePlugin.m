@@ -205,10 +205,8 @@ FIRQuery *getQuery(NSDictionary *arguments) {
     FIRDocumentReference *reference = [[FIRFirestore firestore] documentWithPath:path];
     FIRWriteBatch batch = [_batches objectForKey:handle];
     if (![options isEqual:[NSNull null]] &&
-        [options[@"merge"] isEqual:[NSNumber numberWithBool:YES]]){
-      [batch setData:call.arguments[@"data"]
-         forDocument:reference
-             options:[FIRSetOptions merge]];
+        [options[@"merge"] isEqual:[NSNumber numberWithBool:YES]]) {
+      [batch setData:call.arguments[@"data"] forDocument:reference options:[FIRSetOptions merge]];
     } else {
       [batch setData:call.arguments[@"data"] forDocument:reference];
     }

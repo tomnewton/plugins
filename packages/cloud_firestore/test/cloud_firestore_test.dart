@@ -314,7 +314,7 @@ void main() {
         expect(colRef.path, 'foo/bar/baz');
       });
     });
-    group('WriteBatch', (){
+    group('WriteBatch', () {
       test('set', () async {
         final WriteBatch batch = new WriteBatch();
         batch.setData(
@@ -357,15 +357,12 @@ void main() {
           log,
           <Matcher>[
             isMethodCall('WriteBatch#create', arguments: null),
-            isMethodCall(
-              'WriteBatch#setData',
-              arguments: <String, dynamic>{
-                'handle': 1,
-                'path': 'foo/bar',
-                'data': <String, String>{'bazKey': 'quxValue'},
-                'options': <String, bool>{'merge': true},
-              }
-            ),
+            isMethodCall('WriteBatch#setData', arguments: <String, dynamic>{
+              'handle': 1,
+              'path': 'foo/bar',
+              'data': <String, String>{'bazKey': 'quxValue'},
+              'options': <String, bool>{'merge': true},
+            }),
             isMethodCall(
               'WriteBatch#commit',
               arguments: <String, dynamic>{

@@ -9,7 +9,6 @@ import android.util.SparseArray;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
-import com.google.firebase.firestore.WriteBatch;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentChange;
 import com.google.firebase.firestore.DocumentReference;
@@ -21,6 +20,7 @@ import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.firestore.SetOptions;
+import com.google.firebase.firestore.WriteBatch;
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
@@ -208,7 +208,7 @@ public class CloudFirestorePlugin implements MethodCallHandler {
           @SuppressWarnings("unchecked")
           Map<String, Object> options = (Map<String, Object>) arguments.get("options");
           WriteBatch batch = batches.get(handle);
-          if (options != null && (Boolean) options.get("merge")){
+          if (options != null && (Boolean) options.get("merge")) {
             batch.set(reference, arguments.get("data"), SetOptions.merge());
           } else {
             batch.set(reference, arguments.get("data"));
