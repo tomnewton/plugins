@@ -99,6 +99,7 @@ void main() {
               'path': 'foo',
               'parameters': <String, dynamic>{
                 'where': <List<dynamic>>[],
+                'orderBy': <List<dynamic>>[],
               }
             },
           ),
@@ -127,6 +128,7 @@ void main() {
                   'where': <List<dynamic>>[
                     <dynamic>['createdAt', '<', 100],
                   ],
+                  'orderBy': <List<dynamic>>[],
                 }
               },
             ),
@@ -156,6 +158,7 @@ void main() {
                   'where': <List<dynamic>>[
                     <dynamic>['profile', '==', null],
                   ],
+                  'orderBy': <List<dynamic>>[],
                 }
               },
             ),
@@ -183,7 +186,9 @@ void main() {
                 'path': 'foo',
                 'parameters': <String, dynamic>{
                   'where': <List<dynamic>>[],
-                  'orderBy': <dynamic>['createdAt', false],
+                  'orderBy': <List<dynamic>>[
+                    <dynamic>['createdAt', false]
+                  ],
                 }
               },
             ),
