@@ -25,3 +25,4 @@ part 'src/firestore_codecs.dart';
 part 'src/query.dart';
 part 'src/query_snapshot.dart';
 part 'src/set_options.dart';
+part 'src/write_batch.dart';
