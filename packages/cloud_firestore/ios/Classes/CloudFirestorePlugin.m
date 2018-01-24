@@ -58,6 +58,8 @@ FIRQuery *getQuery(NSDictionary *arguments) {
 @implementation FLTCloudFirestorePlugin {
   NSMutableDictionary<NSNumber *, id<FIRListenerRegistration>> *_listeners;
   int _nextListenerHandle;
+  NSMutableDictionary<NSNumber *, FIRWriteBatch *> *_batches;
+  int _nextBatchHandle;
 }
 
 + (void)registerWithRegistrar:(NSObject<FlutterPluginRegistrar> *)registrar {
@@ -76,7 +78,7 @@ FIRQuery *getQuery(NSDictionary *arguments) {
       [FIRApp configure];
     }
     _listeners = [NSMutableDictionary<NSNumber *, id<FIRListenerRegistration>> dictionary];
-    _batches = [NSMutableDictionary<NSNumber *, id<FIRWriteBatch>> dictionary];
+    _batches = [NSMutableDictionary<NSNumber *, FIRWriteBatch *> dictionary];
     _nextListenerHandle = 0;
     _nextBatchHandle = 0;
   }
@@ -203,7 +205,7 @@ FIRQuery *getQuery(NSDictionary *arguments) {
     NSString *path = call.arguments[@"path"];
     NSDictionary *options = call.arguments[@"options"];
     FIRDocumentReference *reference = [[FIRFirestore firestore] documentWithPath:path];
-    FIRWriteBatch batch = [_batches objectForKey:handle];
+    FIRWriteBatch *batch = [_batches objectForKey:handle];
     if (![options isEqual:[NSNull null]] &&
         [options[@"merge"] isEqual:[NSNumber numberWithBool:YES]]) {
       [batch setData:call.arguments[@"data"] forDocument:reference options:[FIRSetOptions merge]];
@@ -215,19 +217,19 @@ FIRQuery *getQuery(NSDictionary *arguments) {
     NSNumber *handle = call.arguments[@"handle"];
     NSString *path = call.arguments[@"path"];
     FIRDocumentReference *reference = [[FIRFirestore firestore] documentWithPath:path];
-    FIRWriteBatch batch = [_batches objectForKey:handle];
+    FIRWriteBatch *batch = [_batches objectForKey:handle];
     [batch updateData:call.arguments[@"data"] forDocument:reference];
     result(nil);
   } else if ([@"WriteBatch#delete" isEqualToString:call.method]) {
     NSNumber *handle = call.arguments[@"handle"];
     NSString *path = call.arguments[@"path"];
     FIRDocumentReference *reference = [[FIRFirestore firestore] documentWithPath:path];
-    FIRWriteBatch batch = [_batches objectForKey:handle];
+    FIRWriteBatch *batch = [_batches objectForKey:handle];
     [batch deleteDocument:reference];
     result(nil);
   } else if ([@"WriteBatch#commit" isEqualToString:call.method]) {
     NSNumber *handle = call.arguments[@"handle"];
-    FIRWriteBatch batch = [_batches objectForKey:handle];
+    FIRWriteBatch *batch = [_batches objectForKey:handle];
     [batch commitWithCompletion:defaultCompletionBlock];
     [_batches removeObjectForKey:handle];
   } else {
