@@ -1,3 +1,7 @@
+## 0.2.3
+
+* Support for batches writes.
+
 ## 0.2.2
 
 * Add `get` to DocumentReference.
