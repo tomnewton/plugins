@@ -1,6 +1,6 @@
 ## 0.2.3
 
-* Support for batches writes.
+* Support for batched writes.
 
 ## 0.2.2
 
