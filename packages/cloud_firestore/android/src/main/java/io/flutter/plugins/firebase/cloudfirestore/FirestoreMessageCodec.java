@@ -5,6 +5,7 @@
 package io.flutter.plugins.firebase.cloudfirestore;
 
 import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.Blob;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.GeoPoint;
 import io.flutter.plugin.common.*;
@@ -219,6 +220,9 @@ public final class FirestoreMessageCodec implements MessageCodec<Object> {
     } else if (value instanceof byte[]) {
       stream.write(BYTE_ARRAY);
       writeBytes(stream, (byte[]) value);
+    } else if (value instanceof Blob){
+      stream.write(BYTE_ARRAY);
+      writeBytes(stream, ((Blob)value).toBytes());
     } else if (value instanceof int[]) {
       stream.write(INT_ARRAY);
       final int[] array = (int[]) value;
