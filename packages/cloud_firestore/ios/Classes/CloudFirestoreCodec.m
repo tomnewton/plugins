@@ -188,10 +188,10 @@
 }
 
 - (void)writeValue:(id)value {
-    if (value == nil || value == [NSNull null]  {
+    if (value == nil || value == [NSNull null] ) {
     [self writeByte:CloudFirestoreFieldNil];
     } else if ( [value isKindOfClass:[NSData class]] ){
-        if ((NSData *)value).length == 0 ) {
+        if ( ((NSData *)value).length == 0 ) {
             [self writeByte:CloudFirestoreFieldNil];
         } else {
             [self writeValue:[FlutterStandardTypedData typedDataWithBytes:value]];
